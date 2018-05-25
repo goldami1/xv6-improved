@@ -10,7 +10,7 @@
 #include "spinlock.h"
 
 
-#define PLIST_MIN 4
+#define PLIST_MIN 3
 #define PLIST_MAX 4
 
 
@@ -33,7 +33,8 @@ struct {
   struct spinlock lock;
   int use_lock;
   struct run *freelist;
-} pkmem[NCPU];
+} pkmem[NCPU] = {{ 0 }};
+
 
 // Initialization happens in two phases.
 // 1. main() calls kinit1() while still using entrypgdir to place just
@@ -53,11 +54,6 @@ kinit2(void *vstart, void *vend)
 {
   freerange(vstart, vend);
   kmem.use_lock = 1;
-  int i;
-  for (i=0 ; i<NCPU ; ++i)
-  {
-    pkmem[i].count = 0;
-  }
 }
 
 void
@@ -102,6 +98,7 @@ kfree(char *v)
   r->next = pkmem[cpuid()].freelist;
   pkmem[cpuid()].freelist = r;
   pkmem[cpuid()].count++;
+  cprintf("- %d %d\n",cpuid(),pkmem[cpuid()].count);
   popcli();
 
 }
@@ -178,6 +175,9 @@ kalloc(void)
   if(r)
   {
     pkmem[cpuid()].count--;
+
+    cprintf("+ %d %d\n",cpuid(),pkmem[cpuid()].count);
+
     pkmem[cpuid()].freelist = r->next;
   }
     
