@@ -11,7 +11,7 @@
 #include "mmu.h"
 #include "proc.h"
 
-
+struct system_pg_stat cpu_pg_stats;
 struct cpu cpus[NCPU];
 int ncpu;
 uchar ioapicid;
@@ -110,6 +110,7 @@ mpinit(void)
       if(ncpu < NCPU) {
         cpus[ncpu].apicid = proc->apicid;  // apicid may differ from ncpu
         ncpu++;
+		cpu_pg_stats.ncpu = ncpu;
       }
       p += sizeof(struct mpproc);
       continue;

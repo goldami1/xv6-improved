@@ -13,6 +13,19 @@ struct cpu {
 extern struct cpu cpus[NCPU];
 extern int ncpu;
 
+struct cpu_pg_stat{
+	int cpu;
+	int pool;
+	int total_alloc;
+	int total_freed;
+};
+struct system_pg_stat{
+	int ncpu;
+	struct cpu_pg_stat pg_stat[MAX_CPU];
+}
+
+extern struct system_pg_stat cpu_pg_stats;
+
 //PAGEBREAK: 17
 // Saved registers for kernel context switches.
 // Don't need to save all the segment registers (%cs, etc),
