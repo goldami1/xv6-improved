@@ -9,6 +9,11 @@
 #include "mmu.h"
 #include "spinlock.h"
 
+
+#define PLIST_MIN 4
+#define PLIST_MAX 4
+
+
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
                    // defined by the kernel linker script in kernel.ld
@@ -22,6 +27,13 @@ struct {
   int use_lock;
   struct run *freelist;
 } kmem;
+
+struct {
+  int count;
+  struct spinlock lock;
+  int use_lock;
+  struct run *freelist;
+} pkmem[NCPU];
 
 // Initialization happens in two phases.
 // 1. main() calls kinit1() while still using entrypgdir to place just
@@ -41,6 +53,11 @@ kinit2(void *vstart, void *vend)
 {
   freerange(vstart, vend);
   kmem.use_lock = 1;
+  int i;
+  for (i=0 ; i<NCPU ; ++i)
+  {
+    pkmem[i].count = 0;
+  }
 }
 
 void
@@ -58,6 +75,45 @@ freerange(void *vstart, void *vend)
 // initializing the allocator; see kinit above.)
 void
 kfree(char *v)
+{
+  if(!kmem.use_lock)
+  {
+    skfree(v);
+    return;
+  }
+  
+  struct run *r;
+
+  if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
+    panic("kfree");
+
+  // Fill with junk to catch dangling refs.
+  memset(v, 1, PGSIZE);
+
+  pushcli();
+  if(pkmem[cpuid()].count == PLIST_MAX)
+  {
+    skfree(v);
+    popcli();
+    return;
+  }
+
+  r = (struct run*)v;
+  r->next = pkmem[cpuid()].freelist;
+  pkmem[cpuid()].freelist = r;
+  pkmem[cpuid()].count++;
+  popcli();
+
+}
+
+
+//PAGEBREAK: 21
+// Free the page of physical memory pointed at by v,
+// which normally should have been returned by a
+// call to kalloc().  (The exception is when
+// initializing the allocator; see kinit above.)
+void
+skfree(char *v)
 {
   struct run *r;
 
@@ -80,7 +136,7 @@ kfree(char *v)
 // Returns a pointer that the kernel can use.
 // Returns 0 if the memory cannot be allocated.
 char*
-kalloc(void)
+skalloc(void)
 {
   struct run *r;
 
@@ -94,3 +150,38 @@ kalloc(void)
   return (char*)r;
 }
 
+// Allocate one 4096-byte page of physical memory.
+// Returns a pointer that the kernel can use.
+// Returns 0 if the memory cannot be allocated.
+char*
+kalloc(void)
+{
+  if(!kmem.use_lock)
+    return skalloc();
+
+  struct run *r;
+  
+  
+  
+  pushcli();
+  if(pkmem[cpuid()].count <= PLIST_MIN)
+  {
+    int i;
+    for (i =0 ; i< PLIST_MIN - pkmem[cpuid()].count ; ++i)
+    {
+      r = (struct run*)skalloc();
+      kfree((char*)r);
+    }
+  }
+
+  r = pkmem[cpuid()].freelist;
+  if(r)
+  {
+    pkmem[cpuid()].count--;
+    pkmem[cpuid()].freelist = r->next;
+  }
+    
+
+  popcli();
+  return (char*)r;
+}
