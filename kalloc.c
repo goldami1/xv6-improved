@@ -8,10 +8,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "spinlock.h"
-
-
-#define PLIST_MIN 3
-#define PLIST_MAX 4
+#include "proc.h"
 
 
 void freerange(void *vstart, void *vend);
@@ -30,10 +27,8 @@ struct {
 
 struct {
   int count;
-  struct spinlock lock;
-  int use_lock;
   struct run *freelist;
-} pkmem[NCPU] = {{ 0 }};
+} pkmem[MAX_CPU] = {{ 0 }};
 
 
 // Initialization happens in two phases.
@@ -87,7 +82,8 @@ kfree(char *v)
   memset(v, 1, PGSIZE);
 
   pushcli();
-  if(pkmem[cpuid()].count == PLIST_MAX)
+  int currentCpu = cpuid();
+  if(pkmem[currentCpu].count >= PLIST_MAX)
   {
     skfree(v);
     popcli();
@@ -95,9 +91,11 @@ kfree(char *v)
   }
 
   r = (struct run*)v;
-  r->next = pkmem[cpuid()].freelist;
-  pkmem[cpuid()].freelist = r;
-  pkmem[cpuid()].count++;
+  r->next = pkmem[currentCpu].freelist;
+  pkmem[currentCpu].freelist = r;
+  pkmem[currentCpu].count++;
+  cpu_pg_stats.pg_stat[currentCpu].pool = pkmem[currentCpu].count;
+  cpu_pg_stats.pg_stat[currentCpu].total_freed++;
   cprintf("- %d %d\n",cpuid(),pkmem[cpuid()].count);
   popcli();
 
@@ -161,24 +159,25 @@ kalloc(void)
   
   
   pushcli();
-  if(pkmem[cpuid()].count <= PLIST_MIN)
+  int currentCpu = cpuid();
+  if(pkmem[currentCpu].count <= PLIST_MIN)
   {
     int i;
-    for (i =0 ; i< PLIST_MIN - pkmem[cpuid()].count ; ++i)
+    for (i =0 ; i< PLIST_MIN - pkmem[currentCpu].count ; i++)
     {
       r = (struct run*)skalloc();
       kfree((char*)r);
     }
   }
 
-  r = pkmem[cpuid()].freelist;
+  r = pkmem[currentCpu].freelist;
   if(r)
   {
-    pkmem[cpuid()].count--;
-
-    cprintf("+ %d %d\n",cpuid(),pkmem[cpuid()].count);
-
-    pkmem[cpuid()].freelist = r->next;
+    pkmem[currentCpu].count--;
+	cpu_pg_stats.pg_stat[currentCpu].pool = pkmem[currentCpu].count;
+	cpu_pg_stats.pg_stat[currentCpu].total_alloc++;
+    cprintf("+ %d %d\n",cpuid(),pkmem[currentCpu].count);
+    pkmem[currentCpu].freelist = r->next;
   }
     
 

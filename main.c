@@ -7,6 +7,7 @@
 #include "x86.h"
 
 static void startothers(void);
+static void statsInit(void);
 static void mpmain(void)  __attribute__((noreturn));
 extern pde_t *kpgdir;
 extern char end[]; // first address after kernel loaded from ELF file
@@ -52,6 +53,7 @@ static void
 mpmain(void)
 {
   cprintf("cpu%d: starting %d\n", cpuid(), cpuid());
+  statsInit();
   idtinit();       // load idt register
   xchg(&(mycpu()->started), 1); // tell startothers() we're up
   scheduler();     // start running processes
@@ -114,3 +116,11 @@ pde_t entrypgdir[NPDENTRIES] = {
 //PAGEBREAK!
 // Blank page.
 
+static void statsInit(void)
+{
+	int currentCpu = cpuid();
+
+	cpu_pg_stats.ncpu = ncpu;
+	cpu_pg_stats.pg_stat[currentCpu] = {0};
+	cpu_pg_stats.pg_stat[currentCpu].cpu = currentCpu;
+}
