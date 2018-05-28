@@ -10,7 +10,8 @@
 *.asm
 *.sym
 
-.vs
+.vs/
+.vscode/
 v15
 vectors.S
 bootblock
