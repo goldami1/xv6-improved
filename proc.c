@@ -291,6 +291,7 @@ wait(void)
         p->kstack = 0;
         freevm(p->pgdir);
         p->pid = 0;
+        p->parent->exitcode = p->exitcode;
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
@@ -531,4 +532,32 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+// Exit the current process.  Does not return.
+// An exited process remains in the zombie state
+// until its parent calls wait() to find out it exited.
+void
+exit2(int e)
+{
+  acquire(&ptable.lock);
+  myproc()->exitcode = e;
+  release(&ptable.lock);
+  exit();
+}
+
+// Wait for a child process to exit and return its pid.
+// Return -1 if this process has no children.
+int
+wait2(int* e)
+{
+  struct proc *p = myproc();
+  int res = wait();
+
+  acquire(&ptable.lock);
+  *e = p->exitcode;
+  p->exitcode = 0;
+  release(&ptable.lock);
+  
+  return res;
 }

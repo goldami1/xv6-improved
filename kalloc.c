@@ -59,6 +59,7 @@ freerange(void *vstart, void *vend)
   for(; p + PGSIZE <= (char*)vend; p += PGSIZE)
     kfree(p);
 }
+
 //PAGEBREAK: 21
 // Free the page of physical memory pointed at by v,
 // which normally should have been returned by a
@@ -67,6 +68,7 @@ freerange(void *vstart, void *vend)
 void
 kfree(char *v)
 {
+
   if(!kmem.use_lock)
   {
     skfree(v);
@@ -74,13 +76,11 @@ kfree(char *v)
   }
   
   struct run *r;
-
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
   memset(v, 1, PGSIZE);
-
   pushcli();
   int currentCpu = cpuid();
   if(pkmem[currentCpu].count >= PLIST_MAX)
@@ -96,7 +96,6 @@ kfree(char *v)
   pkmem[currentCpu].count++;
   cpu_pg_stats.pg_stat[currentCpu].pool = pkmem[currentCpu].count;
   cpu_pg_stats.pg_stat[currentCpu].total_freed++;
-  cprintf("- %d %d\n",cpuid(),pkmem[cpuid()].count);
   popcli();
 
 }
@@ -155,9 +154,6 @@ kalloc(void)
     return skalloc();
 
   struct run *r;
-  
-  
-  
   pushcli();
   int currentCpu = cpuid();
   if(pkmem[currentCpu].count <= PLIST_MIN)
@@ -174,13 +170,11 @@ kalloc(void)
   if(r)
   {
     pkmem[currentCpu].count--;
-	cpu_pg_stats.pg_stat[currentCpu].pool = pkmem[currentCpu].count;
-	cpu_pg_stats.pg_stat[currentCpu].total_alloc++;
-    cprintf("+ %d %d\n",cpuid(),pkmem[currentCpu].count);
+    cpu_pg_stats.pg_stat[currentCpu].pool = pkmem[currentCpu].count;
+    cpu_pg_stats.pg_stat[currentCpu].total_alloc++;
     pkmem[currentCpu].freelist = r->next;
   }
     
-
   popcli();
   return (char*)r;
 }

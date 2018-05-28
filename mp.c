@@ -11,7 +11,7 @@
 #include "mmu.h"
 #include "proc.h"
 
-struct system_pg_stat cpu_pg_stats;
+struct system_pg_stat cpu_pg_stats = {0};
 struct cpu cpus[NCPU];
 int ncpu;
 uchar ioapicid;

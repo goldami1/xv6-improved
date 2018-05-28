@@ -121,6 +121,5 @@ static void statsInit(void)
 	int currentCpu = cpuid();
 
 	cpu_pg_stats.ncpu = ncpu;
-	cpu_pg_stats.pg_stat[currentCpu] = {0};
 	cpu_pg_stats.pg_stat[currentCpu].cpu = currentCpu;
 }
