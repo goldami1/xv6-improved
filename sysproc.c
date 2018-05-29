@@ -97,8 +97,8 @@ sys_exit2(void)
 
   if(argint(0, &e) < 0)
     return -1;
-
-  exit2(e);
+  myproc()->exitstatus = e;
+  exit();
   return 0;  // not reached
 }
 
@@ -109,6 +109,6 @@ sys_wait2(void)
 
   if(argptr(0, (void*)&e, sizeof(int)) < 0)
     return -1;
-
+    
   return wait2(e);
 }
