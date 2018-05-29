@@ -25,3 +25,4 @@
 #define SYS_mutex_release 24
 #define SYS_exit2  25
 #define SYS_wait2  26
+#define SYS_system_pg_stat 27

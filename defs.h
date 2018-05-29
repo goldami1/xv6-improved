@@ -128,6 +128,7 @@ void            yield(void);
 int				system_pg_stat(struct system_pg_stat*);
 int				mutex_acquire(int);
 int				mutex_release(void);
+int             system_pg_stat(struct system_pg_stat*);
 
 
 // swtch.S

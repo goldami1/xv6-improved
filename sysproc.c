@@ -130,3 +130,10 @@ int sys_getppid(void)
 {
 	return myproc()->parent->pid;
 }
+
+int sys_system_pg_stat(void)
+{
+	struct system_pg_stat* stat;
+	argptr(0, (char**)&stat, sizeof(struct system_pg_stat*));
+	return system_pg_stat(stat);
+}

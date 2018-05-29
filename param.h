@@ -1,9 +1,9 @@
 #define NPROC        64  // maximum number of processes
 #define KSTACKSIZE 4096  // size of per-process kernel stack
 #define NCPU          8  // maximum number of CPUs
-#define MAX_CPU		2
-#define PLIST_MIN	10
-#define PLIST_MAX	40
+#define MAX_CPU		4
+#define PLIST_MIN	3
+#define PLIST_MAX	5
 #define NOFILE       16  // open files per process
 #define NFILE       100  // open files per system
 #define NINODE       50  // maximum number of active i-nodes

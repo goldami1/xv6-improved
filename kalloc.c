@@ -158,8 +158,9 @@ kalloc(void)
   int currentCpu = cpuid();
   if(pkmem[currentCpu].count <= PLIST_MIN)
   {
-    int i;
-    for (i =0 ; i< PLIST_MIN - pkmem[currentCpu].count ; i++)
+    //int i;
+    //for (i =0 ; i< PLIST_MIN - pkmem[currentCpu].count ; i++)
+	while(pkmem[currentCpu].count<=PLIST_MIN)
     {
       r = (struct run*)skalloc();
       kfree((char*)r);

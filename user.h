@@ -1,5 +1,6 @@
 struct stat;
 struct rtcdate;
+struct system_pg_stat;
 
 // system calls
 int fork(void);
@@ -23,11 +24,12 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int exit2(int) __attribute__((noreturn));
-int wait2(int*);
 int getppid(void);
 int mutex_acquire(int);
 int mutex_release(void);
+int exit2(int) __attribute__((noreturn));
+int wait2(int*);
+int system_pg_stat(struct system_pg_stat*);
 
 // ulib.c
 int stat(char*, struct stat*);

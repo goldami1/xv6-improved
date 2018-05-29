@@ -108,6 +108,7 @@ extern int sys_mutex_acquire(void);
 extern int sys_mutex_release(void);
 extern int sys_exit2(void);
 extern int sys_wait2(void);
+extern int sys_system_pg_stat(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -136,6 +137,7 @@ static int (*syscalls[])(void) = {
 [SYS_mutex_release]	sys_mutex_release,
 [SYS_exit2]   sys_exit2,
 [SYS_wait2]   sys_wait2,
+[SYS_system_pg_stat] sys_system_pg_stat,
 };
 
 void

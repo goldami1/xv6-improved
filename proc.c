@@ -622,3 +622,9 @@ int mutex_release(void)
 	wakeup((void*)&curproc->mutex_id);
 	return 0;
 }
+
+int system_pg_stat(struct system_pg_stat* i_PUPageStats)
+{
+	*i_PUPageStats = cpu_pg_stats;
+	return 1;
+}
