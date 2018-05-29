@@ -222,15 +222,22 @@ fork(void)
   return pid;
 }
 
+void
+exit(void)
+{
+	exit2(0);
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
-void
-exit(void)
+int
+exit2(int status)
 {
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
+  myproc()->exitstatus = status;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -266,6 +273,7 @@ exit(void)
   curproc->state = ZOMBIE;
   sched();
   panic("zombie exit");
+  return -1;
 }
 
 // Wait for a child process to exit and return its pid.
@@ -523,7 +531,7 @@ wait2(int* status)
         p->kstack = 0;
         freevm(p->pgdir);
         p->pid = 0;
-        if((int)status != -1)
+        if(status != (int*)-1)
         {
           *status = p->exitstatus;
         }

@@ -24,7 +24,7 @@ struct system_pg_stat{
 	struct cpu_pg_stat pg_stat[MAX_CPU];
 };
 
-extern struct system_pg_stat cpu_pg_stats;
+struct system_pg_stat cpu_pg_stats;
 
 //PAGEBREAK: 17
 // Saved registers for kernel context switches.
