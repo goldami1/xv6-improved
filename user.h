@@ -25,6 +25,9 @@ int sleep(int);
 int uptime(void);
 int exit2(int) __attribute__((noreturn));
 int wait2(int*);
+int getppid(void);
+int mutex_acquire(int);
+int mutex_release(void);
 
 // ulib.c
 int stat(char*, struct stat*);

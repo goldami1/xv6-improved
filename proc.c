@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#define	VERBOSE	0
 
 struct {
   struct spinlock lock;
@@ -237,7 +238,6 @@ exit2(int status)
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-  myproc()->exitstatus = status;
 
   if(curproc == initproc)
     panic("init exiting");
@@ -256,7 +256,13 @@ exit2(int status)
   curproc->cwd = 0;
 
   acquire(&ptable.lock);
-  
+  if (curproc->mutex_accquired)
+  {
+	  curproc->mutex_accquired = 0;
+	  wakeup1((void *)curproc->mutex_id);
+  }
+  curproc->exitstatus = status;
+  curproc->mutex_accquired = 0;
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
 
@@ -553,4 +559,66 @@ wait2(int* status)
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
+}
+
+int mutex_acquire(int id)
+{
+	struct proc *curproc = myproc();
+	if (curproc->mutex_accquired)
+		return -1;
+
+	acquire(&ptable.lock);
+	struct proc *p;
+	if (VERBOSE)
+	{
+		cprintf("process %d trying to acquire\n", curproc->pid);
+	}
+
+loop:
+	for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+	{
+		if (p->mutex_accquired && p->mutex_id == id)
+		{
+			if (curproc->killed)
+			{
+				release(&ptable.lock);
+				return -1;
+			}
+			sleep((void *)&p->mutex_id, &ptable.lock);
+			goto loop;
+		}
+	}
+
+	curproc->mutex_id = id;
+	curproc->mutex_accquired = 1;
+	release(&ptable.lock);
+
+	if (VERBOSE)
+	{
+		cprintf("process %d succeeded to acquire\n", curproc->pid);
+	}
+	return 0;
+}
+
+int mutex_release(void)
+{
+	struct proc *curproc = myproc();
+	if (VERBOSE)
+	{
+		cprintf("process %d going to release\n", curproc->pid);
+	}
+
+	if (!curproc->mutex_accquired)
+	{
+		return -1;
+	}
+
+	curproc->mutex_accquired = 0;
+	if (VERBOSE)
+	{
+		cprintf("process %d going to wake up %d\n", curproc->pid, curproc->mutex_id);
+	}
+
+	wakeup((void*)&curproc->mutex_id);
+	return 0;
 }

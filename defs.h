@@ -126,6 +126,9 @@ int             wait2(int*);
 void            wakeup(void*);
 void            yield(void);
 int				system_pg_stat(struct system_pg_stat*);
+int				mutex_acquire(int);
+int				mutex_release(void);
+
 
 // swtch.S
 void            swtch(struct context**, struct context*);

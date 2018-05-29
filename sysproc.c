@@ -111,3 +111,22 @@ sys_wait2(void)
     
   return wait2(e);
 }
+
+int sys_mutex_acquire(void)
+{
+	int id;
+
+	if (argint(0, &id) < 0)
+		return -1;
+	return 0;
+}
+
+int sys_mutex_release(void)
+{
+	return 0;
+}
+
+int sys_getppid(void)
+{
+	return myproc()->parent->pid;
+}

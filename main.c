@@ -120,6 +120,8 @@ static void statsInit(void)
 {
 	int currentCpu = cpuid();
 	cpu_pg_stats.ncpu = ncpu;
-	cpu_pg_stats.pg_stat[currentCpu] = { 0 };
+	cpu_pg_stats.pg_stat[currentCpu].pool = 0;
+	cpu_pg_stats.pg_stat[currentCpu].total_alloc = 0;
+	cpu_pg_stats.pg_stat[currentCpu].total_freed = 0;
 	cpu_pg_stats.pg_stat[currentCpu].cpu = currentCpu;
 }

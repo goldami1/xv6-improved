@@ -17,20 +17,24 @@ printerr()
 //<Ami main>
 int main(int argc, char *argv[])
 {
+	int status, pid, i;
 
-	int pid, i, status;
-
-	for (i = 1; i <= N; i++) {
+	for (i = 1; i <= N; i++)
+	{
 		pid = fork();
-		if (pid == 0) { //son code 			
-			printf(STD_OUT, "my pid is <%d> going to exit(%d)\n", getpid(), i);
+		if (pid == 0)
+		{			
+			mutex_acquire(1);
+			printf(STDO, "my pid is <%d> going to exit(%d)\n", getpid(), i);
+			mutex_release();
 			exit2(i);
 		}
 	}
 
-	for (i = 1; i <= N; i++) {
-		pid = wait2(&status); //waiting till son is killed
-		printf(STD_OUT, "child <%d> exited with status <%d>\n", pid, status);
+	for (i = 1; i <= N; i++)
+	{
+		pid = wait2(&status);
+		printf(STDO, "child <%d> exited with status <%d>\n", pid, status);
 	}
 
 	exit();
