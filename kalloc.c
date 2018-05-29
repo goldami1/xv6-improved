@@ -68,12 +68,11 @@ freerange(void *vstart, void *vend)
 void
 kfree(char *v)
 {
-
-  if(!kmem.use_lock)
-  {
-    skfree(v);
-    return;
-  }
+	if (ncpu==0)
+	{
+		skfree(v);
+		return;
+	}
   
   struct run *r;
   if((uint)v % PGSIZE || v < end || V2P(v) >= PHYSTOP)
@@ -150,21 +149,17 @@ skalloc(void)
 char*
 kalloc(void)
 {
-  if(!kmem.use_lock)
-    return skalloc();
+	if (ncpu==0)
+		return skalloc();
 
   struct run *r;
   pushcli();
   int currentCpu = cpuid();
-  if(pkmem[currentCpu].count <= PLIST_MIN)
+
+  while (pkmem[currentCpu].count <= PLIST_MIN)
   {
-    //int i;
-    //for (i =0 ; i< PLIST_MIN - pkmem[currentCpu].count ; i++)
-	while(pkmem[currentCpu].count<=PLIST_MIN)
-    {
-      r = (struct run*)skalloc();
-      kfree((char*)r);
-    }
+	  r = (struct run*)skalloc();
+	  kfree((char*)r);
   }
 
   r = pkmem[currentCpu].freelist;
